@@ -1,0 +1,59 @@
+.template {
+    background-color: #fff;
+    min-width: 800px;
+    padding: 5px;
+
+    .tip {
+        background-color: rgb(168, 168, 168);
+        font-size: 18px;
+    }
+
+    .main-container {
+        display: flex;
+        flex-direction: row;
+
+        .tools {
+            width: 280px;
+            min-height: 300px;
+            border: 1px solid rgb(16, 69, 184);
+            margin-right: 10px;
+            padding-top: 20px;
+
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            align-items: flex-start;
+            align-content: flex-start;
+
+            .tools-item {
+                display: inline-block;
+                width: 100px;
+                height: 30px;
+                line-height: 30px;
+                background-color:  rgb(16, 69, 184);
+                color: #fff;
+                font-size: 16px;
+                margin: 3px 19px;
+
+                &:hover {
+                    color: aqua;
+                    cursor: pointer;
+                }
+            }
+        }
+
+        .container {
+            // display: inline-block;
+            flex: 1;
+            background-color: #fff;
+            border: 1px solid rgb(16, 69, 184);
+        }
+    }
+
+    .submit-zone {
+        button {
+            margin: 5px 10px;
+        }
+    }
+}

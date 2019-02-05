@@ -3,8 +3,9 @@ import { Stage, Layer } from 'react-konva'
 import lodashmap from 'lodash.map'
 import { Button } from 'antd'
 import Konva from 'konva'
+import qr from 'qr-image'
 import './index.less'
-import img from './pig.jpg'
+
 
 const nodes = [
     {type: "Text", text: "品名", x: 74.60000610351562, y: 42.29999542236328, width: 250},
@@ -48,16 +49,33 @@ class Index extends Component {
         this.layer.current.draw()
     }
 
-    drawImage = ({x, y, width, height}) => {
+    drawImage = ({x, y, width, height, svgpath}) => {
         const position = { x, y }
         const layer = this.layer.current
-        Konva.Image.fromURL(img, function (image) {
-            layer.add(image)
-            image.position(position)
-            image.width(width)
-            image.height(height)
-            layer.draw()
+        // Konva.Image.fromURL(img, function (image) {
+        //     layer.add(image)
+        //     image.position(position)
+        //     image.width(width)
+        //     image.height(height)
+        //     layer.draw()
+        // })
+
+        const path = new Konva.Path({
+            x,
+            y,
+            width,
+            height,
+            data: svgpath,
+            fill: 'black',
+            scale: {
+              x : 4,
+              y : 4
+            }
         })
+
+        layer.add(path)
+        layer.draw()
+
     }
 
     componentDidMount() {
@@ -65,19 +83,28 @@ class Index extends Component {
             if(item.type === 'Text'){
                 this.drawText(item)
             } else if( item.type === 'Image') {
+                const qrcode =  qr.svgObject('http://www.baidu.com', 
+                    {  ec_level: 'L',
+                        type: 'svg'
+                    }
+                )
+                item.svgpath = qrcode.path
                 this.drawImage(item)
             }
         })
     }
 
     render () {
+        
         return (
+            <div>
                 <Stage width={this.state.canvasWidth} height={this.state.canvasHeight} 
                     ref={this.stage}
                     style={{backgroundColor: '#ddd'}}
                 >
                     <Layer ref={this.layer} />
                 </Stage>
+            </div>
         )
     }
 }

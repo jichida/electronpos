@@ -94,16 +94,36 @@ class Index extends Component {
         })
     }
 
+    handleRender = () => {
+        const that = this
+        this.layer.current.toImage({
+            mimeType: 'image/png',
+            callback(img) {
+                console.log(img)
+                that.setState({
+                    renderBill: img
+                })
+            }
+        })
+    }
+
     render () {
-        
+        console.log(this.state.renderBill)
         return (
-            <div>
+            <div className="render-bill">
                 <Stage width={this.state.canvasWidth} height={this.state.canvasHeight} 
                     ref={this.stage}
                     style={{backgroundColor: '#ddd'}}
                 >
                     <Layer ref={this.layer} />
                 </Stage>
+                <div className="submit-zone">
+                    <Button type="primary" onClick={this.handleRender}>生成图片</Button>
+                    <Button>取消</Button>
+                </div>
+                <div>
+                    {this.state.renderBill&&(<img src={this.state.renderBill.src} alt='' />)}
+                </div>
             </div>
         )
     }

@@ -179,7 +179,7 @@ class Index extends Component {
                 text: this.state.datatrans,
                 width: 100,
                 padding: 10,
-                align: this.state.datatrans === '单位' ? 'center' : 'left'
+                align: 'center'//this.state.datatrans === '单位' ? 'center' : 'left'
             })
 
             const rect = new Konva.Rect({

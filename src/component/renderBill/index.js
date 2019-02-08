@@ -6,6 +6,7 @@ import Konva from 'konva'
 import qr from 'qr-image'
 import './index.less'
 
+const step = 20
 
 const nodes = [
     {type: "Text", text: "品名", x: 74.60000610351562, y: 42.29999542236328, width: 250},
@@ -18,11 +19,107 @@ const nodes = [
     {type: "Image", text: undefined, x: 67.60000610351562, y: 158.29999542236328, width: 130, height: 130},
 ]
 
-const groupnodes = [
-    {type: "Text", text: "品名", x: 127.39999389648438, y: 62.29999923706055, width: 250},
-    {type: "Text", text: "单位", x: 161.39999389648438, y: 130.29999923706055, width: 250},
-    {type: "Image", text: undefined, x: 127.39999389648438, y: 175.29999923706055, width: 130, height: 130},
-]
+const groupnodes = {
+    '二维码': { height: 130, id: "二维码", type: "Path", width: 130, x: 200, y: 140 },
+    '会员价': { 
+        fontSize: 12,
+        id: "会员价",
+        text: "会员价",
+        type: "Text",
+        width: 100,
+        height: 32,
+        align: "center",
+        x: 125,
+        y: 120
+    },
+    '店名': { 
+        fontSize: 12,
+        id: "单位",
+        text: "单位",
+        type: "Text",
+        width: 100,
+        height: 32,
+        align: "center",
+        x: 180,
+        y: 20,
+    },
+    '原价': {
+        fontSize: 12,
+        id: "原价",
+        text: "原价",
+        type: "Text",
+        width: 100,
+        height: 32,
+        align: "center",
+        x: 0,
+        y: 120,
+    },
+    '品名': {
+        fontSize: 12,
+        id: "品名",
+        text: "品名",
+        type: "Text",
+        width: 100,
+        height: 32,
+        align: "center",
+        x: 0,
+        y: 80,
+    },
+    '折扣价': { 
+        fontSize: 12,
+        id: "折扣价",
+        text: "折扣价",
+        type: "Text",
+        width: 100,
+        height: 32,
+        align: "center",
+        x: 250,
+        y: 120,
+    },
+    '数量': { 
+        fontSize: 12,
+        id: "数量",
+        text: "数量",
+        type: "Text",
+        width: 100,
+        height: 32,
+        align: "center",
+        x: 375,
+        y: 120,
+    },
+    '日期': {
+        fontSize: 12,
+        id: "日期",
+        text: "日期",
+        type: "Text",
+        width: 100,
+        height: 32,
+        align: "center",
+        x: 400,
+        y: 80,
+    },
+}
+
+const data = {
+    '店名': '武进万达',
+    '品名': '麻辣烫',
+    productdetail:[
+        {
+            '原价': 20,
+            '会员价': 18,
+            '折扣价': 15,
+            '数量': 2,
+        },
+        {
+            '原价': 30,
+            '会员价': 28,
+            '折扣价': 25,
+            '数量': 1,
+        },
+    ],
+    '二维码': '二维码',
+    }
+    
 
 class Index extends Component {
     constructor(props) {
@@ -37,35 +134,61 @@ class Index extends Component {
         
     }
 
-    drawText = ({text, x, y, width}) => {
+    // drawText = ({text, x, y, width, fontSize}) => {
+    //     const konvaText = new Konva.Text({
+    //         x,
+    //         y,
+    //         text,
+    //         width,
+    //         fontSize
+    //     })
+    //     this.layer.current.add(konvaText)
+    //     this.layer.current.draw()
+    // }
+
+    drawText = (text, key, offsetY = 0) => {
+        const { x, y, width, align, fontSize } = groupnodes[key]
         const konvaText = new Konva.Text({
             x,
-            y,
+            y: y + offsetY,
             text,
             width,
-            fontSize: 12,
+            align,
+            fontSize
         })
         this.layer.current.add(konvaText)
         this.layer.current.draw()
     }
 
-    drawImage = ({x, y, width, height, svgpath}) => {
-        const position = { x, y }
-        const layer = this.layer.current
-        // Konva.Image.fromURL(img, function (image) {
-        //     layer.add(image)
-        //     image.position(position)
-        //     image.width(width)
-        //     image.height(height)
-        //     layer.draw()
-        // })
+    // drawImage = ({x, y, width, height, svgpath}) => {
+    //     // const position = { x, y }
+    //     const layer = this.layer.current
+    //     const path = new Konva.Path({
+    //         x,
+    //         y,
+    //         width,
+    //         height,
+    //         data: svgpath,
+    //         fill: 'black',
+    //         scale: {
+    //           x : 4,
+    //           y : 4
+    //         }
+    //     })
 
+    //     layer.add(path)
+    //     layer.draw()
+    // }
+
+    drawImage = (url, key, offsetY = 0) => {
+        const layer = this.layer.current
+        const { x, y, width, height } = groupnodes[key]
         const path = new Konva.Path({
             x,
-            y,
+            y: y + offsetY,
             width,
             height,
-            data: svgpath,
+            data: this.generatePath(url),
             fill: 'black',
             scale: {
               x : 4,
@@ -75,22 +198,65 @@ class Index extends Component {
 
         layer.add(path)
         layer.draw()
+    }
 
+    generatePath = (url)=>{
+        const qrcode =  qr.svgObject(url, 
+            {  
+                ec_level: 'L',
+                type: 'svg'
+            }
+        )
+        return qrcode.path
     }
 
     componentDidMount() {
-        lodashmap(nodes, (item)=>{
-            if(item.type === 'Text'){
-                this.drawText(item)
-            } else if( item.type === 'Image') {
-                const qrcode =  qr.svgObject('http://www.baidu.com', 
-                    {  ec_level: 'L',
-                        type: 'svg'
-                    }
-                )
-                item.svgpath = qrcode.path
-                this.drawImage(item)
-            }
+        // lodashmap(nodes, (item)=>{
+        //     if(item.type === 'Text'){
+        //         this.drawText(item)
+        //     } else if( item.type === 'Path') {
+        //         const qrcode =  qr.svgObject(item.二维码, 
+        //             {  
+        //                 ec_level: 'L',
+        //                 type: 'svg'
+        //             }
+        //         )
+        //         item.svgpath = qrcode.path
+        //         this.drawImage(item)
+        //     }
+        // })
+        let baseY = 0
+        const productDetail = data.productdetail
+        lodashmap(productDetail[0], (item, key)=>{
+            if( baseY === 0 ){
+                baseY = groupnodes[key].y
+            } 
+            this.drawText(key, key)
+        })
+
+        let count = 1
+        lodashmap(productDetail, (pro)=>{
+            lodashmap(pro, (v, key) => {
+                let offsetY = count*step
+                this.drawText(v, key, offsetY)
+            })
+            count = count +1
+        })
+
+        lodashmap(data, (v, key)=>{
+            console.log(key)
+            if (key !== 'productdetail') {
+                let offsetY = 0
+                if(groupnodes[key].y >= baseY ){
+                    offsetY = count*step
+                }
+
+                if(groupnodes[key].type === 'Text'){
+                    this.drawText(v, key, offsetY)
+                } else if( groupnodes[key].type === 'Path'){
+                    this.drawImage(v, key, offsetY)
+                }
+            }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
         })
     }
 

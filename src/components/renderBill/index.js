@@ -19,6 +19,48 @@ const step = 20
 //     {type: "Text", text: "店名", x: 76.60000610351562, y: 12.299995422363281, width: 250},
 //     {type: "Image", text: undefined, x: 67.60000610351562, y: 158.29999542236328, width: 130, height: 130},
 // ]
+const drawText = (layer,groupnodes,text, key, offsetY = 0) => {
+      const { x, y, width, align, fontSize } = groupnodes[key]
+      const konvaText = new Konva.Text({
+          x,
+          y: y + offsetY,
+          text,
+          width,
+          align,
+          fontSize
+      })
+      layer.current.add(konvaText)
+      layer.current.draw()
+  };
+
+const drawImage = (layer,groupnodes,url, key, offsetY = 0) => {
+      const { x, y, width, height } = groupnodes[key]
+      const  generatePath = (url)=>{
+            const qrcode =  qr.svgObject(url,
+                {
+                    ec_level: 'L',
+                    type: 'svg'
+                }
+            )
+            return qrcode.path
+        };
+      const path = new Konva.Path({
+          x,
+          y: y + offsetY,
+          width,
+          height,
+          data: generatePath(url),
+          fill: 'black',
+          scale: {
+            x : 4,
+            y : 4
+          }
+      })
+
+      layer.current.add(path)
+      layer.current.draw()
+  };
+
 
 class Index extends Component {
     constructor(props) {
@@ -29,134 +71,61 @@ class Index extends Component {
         }
         this.stage = React.createRef()
         this.layer = React.createRef()
-
-
     }
 
-    // drawText = ({text, x, y, width, fontSize}) => {
-    //     const konvaText = new Konva.Text({
-    //         x,
-    //         y,
-    //         text,
-    //         width,
-    //         fontSize
-    //     })
-    //     this.layer.current.add(konvaText)
-    //     this.layer.current.draw()
-    // }
+    setlayer(data,groupnodes){
+      console.log(data);
+      console.log(groupnodes);
 
-    drawText = (text, key, offsetY = 0) => {
-        const { x, y, width, align, fontSize } = this.props.groupnodes[key]
-        const konvaText = new Konva.Text({
-            x,
-            y: y + offsetY,
-            text,
-            width,
-            align,
-            fontSize
+      let layer = this.layer;
+      layer.current.removeChildren();
+      let baseY = 0
+      const productDetail = data.productdetail;
+      if(productDetail.length > 0){
+        lodashmap(productDetail[0], (item, key)=>{
+          if(!!groupnodes[key]){
+             if( baseY === 0 ){
+                baseY = groupnodes[key].y
+              }
+            drawText(layer,groupnodes,key, key)
+          }
         })
-        this.layer.current.add(konvaText)
-        this.layer.current.draw()
-    }
+      }
 
-    // drawImage = ({x, y, width, height, svgpath}) => {
-    //     // const position = { x, y }
-    //     const layer = this.layer.current
-    //     const path = new Konva.Path({
-    //         x,
-    //         y,
-    //         width,
-    //         height,
-    //         data: svgpath,
-    //         fill: 'black',
-    //         scale: {
-    //           x : 4,
-    //           y : 4
-    //         }
-    //     })
-
-    //     layer.add(path)
-    //     layer.draw()
-    // }
-
-    drawImage = (url, key, offsetY = 0) => {
-        const layer = this.layer.current
-        const { x, y, width, height } = this.props.groupnodes[key]
-        const path = new Konva.Path({
-            x,
-            y: y + offsetY,
-            width,
-            height,
-            data: this.generatePath(url),
-            fill: 'black',
-            scale: {
-              x : 4,
-              y : 4
+      let count = 1
+      lodashmap(productDetail, (pro)=>{
+          lodashmap(pro, (v, key) => {
+            if(!!groupnodes[key]){
+              let offsetY = count*step
+              drawText(layer,groupnodes,v, key, offsetY)
             }
-        })
+          })
+          count = count +1
+      })
 
-        layer.add(path)
-        layer.draw()
-    }
+      lodashmap(data, (v, key)=>{
+          console.log(key)
+          if (key !== 'productdetail' && !!groupnodes[key]) {
+              let offsetY = 0
 
-    generatePath = (url)=>{
-        const qrcode =  qr.svgObject(url,
-            {
-                ec_level: 'L',
-                type: 'svg'
-            }
-        )
-        return qrcode.path
+              if(groupnodes[key].y >= baseY ){
+                  offsetY = count*step
+              }
+
+              if(groupnodes[key].type === 'Text'){
+                  drawText(layer,groupnodes,v, key, offsetY)
+              } else if( groupnodes[key].type === 'Path'){
+                  drawImage(layer,groupnodes,v, key, offsetY)
+              }
+
+          }
+      })
+      // this.setState({layer});
     }
 
     componentDidMount() {
-        // lodashmap(nodes, (item)=>{
-        //     if(item.type === 'Text'){
-        //         this.drawText(item)
-        //     } else if( item.type === 'Path') {
-        //         const qrcode =  qr.svgObject(item.二维码,
-        //             {
-        //                 ec_level: 'L',
-        //                 type: 'svg'
-        //             }
-        //         )
-        //         item.svgpath = qrcode.path
-        //         this.drawImage(item)
-        //     }
-        // })
-        let baseY = 0
-        const productDetail = this.props.data.productdetail
-        lodashmap(productDetail[0], (item, key)=>{
-            if( baseY === 0 ){
-                baseY = this.props.groupnodes[key].y
-            }
-            this.drawText(key, key)
-        })
-
-        let count = 1
-        lodashmap(productDetail, (pro)=>{
-            lodashmap(pro, (v, key) => {
-                let offsetY = count*step
-                this.drawText(v, key, offsetY)
-            })
-            count = count +1
-        })
-
-        lodashmap(this.props.data, (v, key)=>{
-            console.log(key)
-            if (key !== 'productdetail') {
-                let offsetY = 0
-                if(this.props.groupnodes[key].y >= baseY ){
-                    offsetY = count*step
-                }
-
-                if(this.props.groupnodes[key].type === 'Text'){
-                    this.drawText(v, key, offsetY)
-                } else if( this.props.groupnodes[key].type === 'Path'){
-                    this.drawImage(v, key, offsetY)
-                }
-            }
-        })
+      const {data,groupnodes} = this.props;
+      this.setlayer(data,groupnodes);
     }
 
     handleRender = () => {
@@ -171,9 +140,26 @@ class Index extends Component {
             }
         })
     }
+    shouldComponentUpdate(nextProps, nextState) {
+      const nextdata = nextProps.data;
+      const nextgroupnodes = nextProps.groupnodes;
 
+      const thisdata = this.props.data;
+      const thisgroupnodes = this.props.groupnodes;
+
+      if(JSON.stringify(nextdata) === JSON.stringify(thisdata)){
+        if(JSON.stringify(nextgroupnodes) === JSON.stringify(thisgroupnodes)){
+          return false;
+        }
+      }
+      return true;//render
+    }
+    componentWillReceiveProps(nextProps){
+      const {data,groupnodes} = nextProps;
+      this.setlayer(data,groupnodes);
+    }
     render () {
-        console.log(this.props.groupnodes)
+
         return (
             <div className="render-bill">
                 <Stage width={this.state.canvasWidth} height={this.state.canvasHeight}
@@ -194,6 +180,7 @@ class Index extends Component {
     }
 }
 const mapStateToProps =  ({posprinter:{groupnodes,data}}) =>{
+
   return {groupnodes,data};
 };
 Index = connect(mapStateToProps)(Index);

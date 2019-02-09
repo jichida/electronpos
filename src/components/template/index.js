@@ -1,11 +1,13 @@
 import React, { Component } from 'react'
+import { connect } from 'react-redux';
 import { Stage, Layer } from 'react-konva'
 import lodashmap from 'lodash.map'
 import { Button } from 'antd'
 import Konva from 'konva'
 import qr from 'qr-image'
 import './index.less'
-import img from './pig.jpg'
+import {posprinter_savetemplate} from '../../actions';
+// import img from './pig.jpg'
 
 const step = 20
 
@@ -167,7 +169,7 @@ class Index extends Component {
             group.add(mem)
             group.add(discount)
             group.add(unit)
-            
+
 
         } else {
 
@@ -212,7 +214,7 @@ class Index extends Component {
         console.log(newPosition)
 
         const layer = this.layer.current
-        const qrcode =  qr.svgObject('票据模板', 
+        const qrcode =  qr.svgObject('票据模板',
             {  ec_level: 'L',
                 type: 'svg'
             }
@@ -297,9 +299,11 @@ class Index extends Component {
         })
         console.log('Nodes: ')
         console.log(nodes)
+        this.props.dispatch(posprinter_savetemplate({groupnodes:nodes}));
     }
 
     render() {
+        console.log(this.state);
         return (
             <div className="template">
                 <p className="tip">拖动票据项目至右边区域！(双击可移除项目)</p>
@@ -322,7 +326,7 @@ class Index extends Component {
                         <span className="tools-item" draggable onDragStart={()=>this.handleDragStart('二维码')}>二维码</span>
                     </div>
                     <div className="container" ref={this.containerRef} onDragOver={this.handleDragOver} onDrop={this.handleDrop}>
-                        <Stage width={this.state.canvasWidth} height={this.state.canvasHeight} 
+                        <Stage width={this.state.canvasWidth} height={this.state.canvasHeight}
                             ref={this.stage}
                             style={{backgroundColor: '#ddd'}}
                         >
@@ -338,5 +342,8 @@ class Index extends Component {
         )
     }
 }
-
+const mapStateToProps =  ({posprinter:{groupnodes}}) =>{
+  return {groupnodes};
+};
+Index = connect(mapStateToProps)(Index);
 export default Index

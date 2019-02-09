@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import { connect } from 'react-redux';
 import { Stage, Layer } from 'react-konva'
 import lodashmap from 'lodash.map'
 import { Button } from 'antd'
@@ -8,118 +9,16 @@ import './index.less'
 
 const step = 20
 
-const nodes = [
-    {type: "Text", text: "品名", x: 74.60000610351562, y: 42.29999542236328, width: 250},
-    {type: "Text", text: "单位", x: 391.6000061035156, y: 84.29999542236328, width: 250},
-    {type: "Text", text: "原价", x: 74.60000610351562, y: 85.29999542236328, width: 250},
-    {type: "Text", text: "会员价", x: 174.60000610351562, y: 83.29999542236328, width: 250},
-    {type: "Text", text: "折扣价", x: 276.6000061035156, y: 85.29999542236328, width: 250},
-    {type: "Text", text: "日期", x: 73.60000610351562, y: 123.29999542236328, width: 250},
-    {type: "Text", text: "店名", x: 76.60000610351562, y: 12.299995422363281, width: 250},
-    {type: "Image", text: undefined, x: 67.60000610351562, y: 158.29999542236328, width: 130, height: 130},
-]
-
-const groupnodes = {
-    '二维码': { height: 130, id: "二维码", type: "Path", width: 130, x: 200, y: 140 },
-    '会员价': { 
-        fontSize: 12,
-        id: "会员价",
-        text: "会员价",
-        type: "Text",
-        width: 100,
-        height: 32,
-        align: "center",
-        x: 125,
-        y: 120
-    },
-    '店名': { 
-        fontSize: 12,
-        id: "单位",
-        text: "单位",
-        type: "Text",
-        width: 100,
-        height: 32,
-        align: "center",
-        x: 180,
-        y: 20,
-    },
-    '原价': {
-        fontSize: 12,
-        id: "原价",
-        text: "原价",
-        type: "Text",
-        width: 100,
-        height: 32,
-        align: "center",
-        x: 0,
-        y: 120,
-    },
-    '品名': {
-        fontSize: 12,
-        id: "品名",
-        text: "品名",
-        type: "Text",
-        width: 100,
-        height: 32,
-        align: "center",
-        x: 0,
-        y: 80,
-    },
-    '折扣价': { 
-        fontSize: 12,
-        id: "折扣价",
-        text: "折扣价",
-        type: "Text",
-        width: 100,
-        height: 32,
-        align: "center",
-        x: 250,
-        y: 120,
-    },
-    '数量': { 
-        fontSize: 12,
-        id: "数量",
-        text: "数量",
-        type: "Text",
-        width: 100,
-        height: 32,
-        align: "center",
-        x: 375,
-        y: 120,
-    },
-    '日期': {
-        fontSize: 12,
-        id: "日期",
-        text: "日期",
-        type: "Text",
-        width: 100,
-        height: 32,
-        align: "center",
-        x: 400,
-        y: 80,
-    },
-}
-
-const data = {
-    '店名': '武进万达',
-    '品名': '麻辣烫',
-    productdetail:[
-        {
-            '原价': 20,
-            '会员价': 18,
-            '折扣价': 15,
-            '数量': 2,
-        },
-        {
-            '原价': 30,
-            '会员价': 28,
-            '折扣价': 25,
-            '数量': 1,
-        },
-    ],
-    '二维码': '二维码',
-    }
-    
+// const nodes = [
+//     {type: "Text", text: "品名", x: 74.60000610351562, y: 42.29999542236328, width: 250},
+//     {type: "Text", text: "单位", x: 391.6000061035156, y: 84.29999542236328, width: 250},
+//     {type: "Text", text: "原价", x: 74.60000610351562, y: 85.29999542236328, width: 250},
+//     {type: "Text", text: "会员价", x: 174.60000610351562, y: 83.29999542236328, width: 250},
+//     {type: "Text", text: "折扣价", x: 276.6000061035156, y: 85.29999542236328, width: 250},
+//     {type: "Text", text: "日期", x: 73.60000610351562, y: 123.29999542236328, width: 250},
+//     {type: "Text", text: "店名", x: 76.60000610351562, y: 12.299995422363281, width: 250},
+//     {type: "Image", text: undefined, x: 67.60000610351562, y: 158.29999542236328, width: 130, height: 130},
+// ]
 
 class Index extends Component {
     constructor(props) {
@@ -131,7 +30,7 @@ class Index extends Component {
         this.stage = React.createRef()
         this.layer = React.createRef()
 
-        
+
     }
 
     // drawText = ({text, x, y, width, fontSize}) => {
@@ -147,7 +46,7 @@ class Index extends Component {
     // }
 
     drawText = (text, key, offsetY = 0) => {
-        const { x, y, width, align, fontSize } = groupnodes[key]
+        const { x, y, width, align, fontSize } = this.props.groupnodes[key]
         const konvaText = new Konva.Text({
             x,
             y: y + offsetY,
@@ -182,7 +81,7 @@ class Index extends Component {
 
     drawImage = (url, key, offsetY = 0) => {
         const layer = this.layer.current
-        const { x, y, width, height } = groupnodes[key]
+        const { x, y, width, height } = this.props.groupnodes[key]
         const path = new Konva.Path({
             x,
             y: y + offsetY,
@@ -201,8 +100,8 @@ class Index extends Component {
     }
 
     generatePath = (url)=>{
-        const qrcode =  qr.svgObject(url, 
-            {  
+        const qrcode =  qr.svgObject(url,
+            {
                 ec_level: 'L',
                 type: 'svg'
             }
@@ -215,8 +114,8 @@ class Index extends Component {
         //     if(item.type === 'Text'){
         //         this.drawText(item)
         //     } else if( item.type === 'Path') {
-        //         const qrcode =  qr.svgObject(item.二维码, 
-        //             {  
+        //         const qrcode =  qr.svgObject(item.二维码,
+        //             {
         //                 ec_level: 'L',
         //                 type: 'svg'
         //             }
@@ -226,11 +125,11 @@ class Index extends Component {
         //     }
         // })
         let baseY = 0
-        const productDetail = data.productdetail
+        const productDetail = this.props.data.productdetail
         lodashmap(productDetail[0], (item, key)=>{
             if( baseY === 0 ){
-                baseY = groupnodes[key].y
-            } 
+                baseY = this.props.groupnodes[key].y
+            }
             this.drawText(key, key)
         })
 
@@ -243,20 +142,20 @@ class Index extends Component {
             count = count +1
         })
 
-        lodashmap(data, (v, key)=>{
+        lodashmap(this.props.data, (v, key)=>{
             console.log(key)
             if (key !== 'productdetail') {
                 let offsetY = 0
-                if(groupnodes[key].y >= baseY ){
+                if(this.props.groupnodes[key].y >= baseY ){
                     offsetY = count*step
                 }
 
-                if(groupnodes[key].type === 'Text'){
+                if(this.props.groupnodes[key].type === 'Text'){
                     this.drawText(v, key, offsetY)
-                } else if( groupnodes[key].type === 'Path'){
+                } else if( this.props.groupnodes[key].type === 'Path'){
                     this.drawImage(v, key, offsetY)
                 }
-            }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+            }
         })
     }
 
@@ -274,10 +173,10 @@ class Index extends Component {
     }
 
     render () {
-        console.log(this.state.renderBill)
+        console.log(this.props.groupnodes)
         return (
             <div className="render-bill">
-                <Stage width={this.state.canvasWidth} height={this.state.canvasHeight} 
+                <Stage width={this.state.canvasWidth} height={this.state.canvasHeight}
                     ref={this.stage}
                     style={{backgroundColor: '#ddd'}}
                 >
@@ -294,5 +193,8 @@ class Index extends Component {
         )
     }
 }
-
+const mapStateToProps =  ({posprinter:{groupnodes,data}}) =>{
+  return {groupnodes,data};
+};
+Index = connect(mapStateToProps)(Index);
 export default Index

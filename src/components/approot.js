@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import Template from './component/template';
-import RenderBill from './component/renderBill'
-import './App.css';
+import Template from '../components/template';
+import RenderBill from '../components/renderBill'
+import '../App.css';
 
 class App extends Component {
   render() {

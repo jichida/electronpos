@@ -47,6 +47,8 @@ class Index extends Component {
 
     drawText = (text, key, offsetY = 0) => {
         const { x, y, width, align, fontSize } = this.props.groupnodes[key]
+        console.log('Nodes(Text)')
+        console.log(this.props.groupnodes)
         const konvaText = new Konva.Text({
             x,
             y: y + offsetY,
@@ -143,7 +145,7 @@ class Index extends Component {
         })
 
         lodashmap(this.props.data, (v, key)=>{
-            console.log(key)
+            console.log('Other Nodes: %s', key)
             if (key !== 'productdetail') {
                 let offsetY = 0
                 if(this.props.groupnodes[key].y >= baseY ){

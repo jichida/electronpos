@@ -25,6 +25,11 @@ class Index extends Component {
         }
     }
 
+    componentDidMount() {
+        this.initTemplate(this.props.groupnodes)
+
+    }
+
     handleDragStart = (name, e)=>{
         this.setState({
             datatrans: name
@@ -67,7 +72,52 @@ class Index extends Component {
         }
     }
 
-    drawText = (position) => {
+    // 二维码: {height: 130, id: "二维码", type: "Path", width: 130, x: 200, …}
+    // 会员价: {fontSize: 12, id: "会员价", text: "会员价", type: "Text", width: 100, …}
+    // 原价: {fontSize: 12, id: "原价", text: "原价", type: "Text", width: 100, …}
+    // 品名: {fontSize: 12, id: "品名", text: "品名", type: "Text", width: 100, …}
+    // 店名: {fontSize: 12, id: "单位", text: "单位", type: "Text", width: 100, …}
+    // 折扣价: {fontSize: 12, id: "折扣价", text: "折扣价", type: "Text", width: 100, …}
+    // 数量: {fontSize: 12, id: "数量", text: "数量", type: "Text", width: 100, …}
+    // 日期: {fontSize: 12, id: "日期", text: "日期", type: "Text", width: 100, …}
+    initTemplate = (template) => {
+        const nodes = this.state.nodes
+        if(template['原价']){
+            nodes['价格'] = true
+            this.setState({
+                nodes
+            })
+            const position = { 
+                x: template['原价'].x, 
+                y: template['原价'].y
+            }
+
+            this.drawText(position, '价格')
+        }
+
+        const temp = { ...template }
+        delete temp['原价']
+        delete temp['会员价']
+        delete temp['折扣价']
+        delete temp['数量']
+
+        console.log(temp)
+
+        lodashmap(temp, (v, k) =>{
+            const pos = { 
+                x: v.x, 
+                y: v.y
+            }
+            if(k === '二维码'){
+                this.drawImage(pos, k)
+            } else {
+                this.drawText(pos, k)
+            }
+        })
+        
+    }
+
+    drawText = (position, datatrans = this.state.datatrans) => {
         const newPosition = this.RoundPosition(position)
         const layer = this.layer.current
 
@@ -101,7 +151,7 @@ class Index extends Component {
             document.body.style.cursor = "default";
         })
 
-        if(this.state.datatrans === '价格') {
+        if(datatrans === '价格') {
             const org = new Konva.Text({
                 id: '原价',
                 x: newPosition.newx,
@@ -174,14 +224,14 @@ class Index extends Component {
         } else {
 
             const text = new Konva.Text({
-                id: this.state.datatrans,
+                id: datatrans,
                 x: newPosition.newx,
                 y: newPosition.newy,
                 fontSize: 12,
-                text: this.state.datatrans,
+                text: datatrans,
                 width: 100,
                 padding: 10,
-                align: 'center'//this.state.datatrans === '单位' ? 'center' : 'left'
+                align: 'center'//datatrans === '单位' ? 'center' : 'left'
             })
 
             const rect = new Konva.Rect({
@@ -204,14 +254,12 @@ class Index extends Component {
 
         }
 
-        this.layer.current.add(group)
-        this.layer.current.draw()
+        layer.add(group)
+        layer.draw()
     }
 
-    drawImage = (position) => {
-        console.log(position)
-        const newPosition = this.RoundPosition(position)
-        console.log(newPosition)
+    drawImage = (position, datatrans = this.state.datatrans) => {
+        // const newPosition = this.RoundPosition(position)
 
         const layer = this.layer.current
         const qrcode =  qr.svgObject('票据模板',
@@ -220,7 +268,7 @@ class Index extends Component {
             }
         )
         const path = new Konva.Path({
-            id: this.state.datatrans,
+            id: datatrans,
             x: position.x,
             y: position.y,
             width: 130,
@@ -257,6 +305,7 @@ class Index extends Component {
         layer.add(path)
         layer.draw()
     }
+
 
     handleSave = () => {
         const children = this.layer.current.getChildren()
@@ -303,7 +352,7 @@ class Index extends Component {
     }
 
     render() {
-        console.log(this.state);
+        
         return (
             <div className="template">
                 <p className="tip">拖动票据项目至右边区域！(双击可移除项目)</p>

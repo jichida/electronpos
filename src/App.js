@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import Template from './component/template';
+import TagTemplate from './components/tagTemplate'
 import RenderBill from './component/renderBill'
 import './App.css';
 

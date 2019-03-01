@@ -19,8 +19,8 @@ const step = 20
 //     {type: "Text", text: "店名", x: 76.60000610351562, y: 12.299995422363281, width: 250},
 //     {type: "Image", text: undefined, x: 67.60000610351562, y: 158.29999542236328, width: 130, height: 130},
 // ]
-const drawText = (layer,billnodes,text, key, offsetY = 0) => {
-      const { x, y, width, align, fontSize } = billnodes[key]
+const drawText = (layer,groupnodes,text, key, offsetY = 0) => {
+      const { x, y, width, align, fontSize } = groupnodes[key]
       const konvaText = new Konva.Text({
           x,
           y: y + offsetY,
@@ -33,8 +33,8 @@ const drawText = (layer,billnodes,text, key, offsetY = 0) => {
       layer.current.draw()
   };
 
-const drawImage = (layer,billnodes,url, key, offsetY = 0) => {
-      const { x, y, width, height } = billnodes[key]
+const drawImage = (layer,groupnodes,url, key, offsetY = 0) => {
+      const { x, y, width, height } = groupnodes[key]
       const  generatePath = (url)=>{
             const qrcode =  qr.svgObject(url,
                 {
@@ -73,21 +73,21 @@ class Index extends Component {
         this.layer = React.createRef()
     }
 
-    setlayer(billdata,billnodes){
-      console.log(billdata);
-      console.log(billnodes);
+    setlayer(data,groupnodes){
+      console.log(data);
+      console.log(groupnodes);
 
       let layer = this.layer;
       layer.current.removeChildren();
       let baseY = 0
-      const productDetail = billdata.productdetail;
+      const productDetail = data.productdetail;
       if(productDetail.length > 0){
         lodashmap(productDetail[0], (item, key)=>{
-          if(!!billnodes[key]){
+          if(!!groupnodes[key]){
              if( baseY === 0 ){
-                baseY = billnodes[key].y
+                baseY = groupnodes[key].y
               }
-            drawText(layer,billnodes,key, key)
+            drawText(layer,groupnodes,key, key)
           }
         })
       }
@@ -95,27 +95,27 @@ class Index extends Component {
       let count = 1
       lodashmap(productDetail, (pro)=>{
           lodashmap(pro, (v, key) => {
-            if(!!billnodes[key]){
+            if(!!groupnodes[key]){
               let offsetY = count*step
-              drawText(layer,billnodes,v, key, offsetY)
+              drawText(layer,groupnodes,v, key, offsetY)
             }
           })
           count = count +1
       })
 
-      lodashmap(billdata, (v, key)=>{
+      lodashmap(data, (v, key)=>{
           console.log(key)
-          if (key !== 'productdetail' && !!billnodes[key]) {
+          if (key !== 'productdetail' && !!groupnodes[key]) {
               let offsetY = 0
 
-              if(billnodes[key].y >= baseY ){
+              if(groupnodes[key].y >= baseY ){
                   offsetY = count*step
               }
 
-              if(billnodes[key].type === 'Text'){
-                  drawText(layer,billnodes,v, key, offsetY)
-              } else if( billnodes[key].type === 'Path'){
-                  drawImage(layer,billnodes,v, key, offsetY)
+              if(groupnodes[key].type === 'Text'){
+                  drawText(layer,groupnodes,v, key, offsetY)
+              } else if( groupnodes[key].type === 'Path'){
+                  drawImage(layer,groupnodes,v, key, offsetY)
               }
 
           }
@@ -124,8 +124,8 @@ class Index extends Component {
     }
 
     componentDidMount() {
-      const {billdata,billnodes} = this.props;
-      this.setlayer(billdata,billnodes);
+      const {data,groupnodes} = this.props;
+      this.setlayer(data,groupnodes);
     }
 
     handleRender = () => {
@@ -141,22 +141,22 @@ class Index extends Component {
         })
     }
     shouldComponentUpdate(nextProps, nextState) {
-      const nextbilldata = nextProps.billdata;
-      const nextbillnodes = nextProps.billnodes;
+      const nextdata = nextProps.data;
+      const nextgroupnodes = nextProps.groupnodes;
 
-      const thisbilldata = this.props.billdata;
-      const thisbillnodes = this.props.billnodes;
+      const thisdata = this.props.data;
+      const thisgroupnodes = this.props.groupnodes;
 
-      if(JSON.stringify(nextbilldata) === JSON.stringify(thisbilldata)){
-        if(JSON.stringify(nextbillnodes) === JSON.stringify(thisbillnodes)){
+      if(JSON.stringify(nextdata) === JSON.stringify(thisdata)){
+        if(JSON.stringify(nextgroupnodes) === JSON.stringify(thisgroupnodes)){
           return false;
         }
       }
       return true;//render
     }
     componentWillReceiveProps(nextProps){
-      const {billdata,billnodes} = nextProps;
-      this.setlayer(billdata,billnodes);
+      const {data,groupnodes} = nextProps;
+      this.setlayer(data,groupnodes);
     }
     render () {
 
@@ -179,9 +179,9 @@ class Index extends Component {
         )
     }
 }
-const mapStateToProps =  ({posprinter:{billnodes,billdata}}) =>{
+const mapStateToProps =  ({posprinter:{groupnodes,data}}) =>{
 
-  return {billnodes,billdata};
+  return {groupnodes,data};
 };
 Index = connect(mapStateToProps)(Index);
 export default Index

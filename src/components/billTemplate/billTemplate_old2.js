@@ -2,16 +2,17 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux';
 import { Stage, Layer } from 'react-konva'
 import lodashmap from 'lodash.map'
-import { Button, Select } from 'antd'
+import lodashset from 'lodash.set'
+import { Button } from 'antd'
 import Konva from 'konva'
 import qr from 'qr-image'
 import './index.less'
-import {posprinter_savetemplate} from '../../actions';
+import { posprinter_savetemplate } from '../../actions';
 
-const Option = Select.Option;
-
-const barcode_data = 'M910.613 200.188H1024V823.81H910.613zM540.613 200.188H654V823.81H540.613zM0 200.188h56.693V823.81H0zM84.173 200.188h28.347V823.81H84.173zM144.173 200.188h28.347V823.81h-28.347zM206.173 200.188h28.347V823.81h-28.347zM361.653 200.188H390V823.81h-28.347zM421.653 200.188H450V823.81h-28.347zM483.653 200.188H512V823.81h-28.347zM691.653 200.188H720V823.81h-28.347zM753.653 200.188H782V823.81h-28.347zM262 200.188h56.693V823.81H262zM814 200.188h56.693V823.81H814z'
 const step = 20
+const barcode_data = 'M910.613 200.188H1024V823.81H910.613zM540.613 200.188H654V823.81H540.613zM0 200.188h56.693V823.81H0zM84.173 200.188h28.347V823.81H84.173zM144.173 200.188h28.347V823.81h-28.347zM206.173 200.188h28.347V823.81h-28.347zM361.653 200.188H390V823.81h-28.347zM421.653 200.188H450V823.81h-28.347zM483.653 200.188H512V823.81h-28.347zM691.653 200.188H720V823.81h-28.347zM753.653 200.188H782V823.81h-28.347zM262 200.188h56.693V823.81H262zM814 200.188h56.693V823.81H814z'
+
+const priceGroup = ['原价', '折扣价', '会员价', '数量']
 
 class Index extends Component {
     constructor(props) {
@@ -19,35 +20,17 @@ class Index extends Component {
         this.containerRef = React.createRef()
         this.stage = React.createRef()
         this.layer = React.createRef()
-        this.svg = React.createRef()
         this.state = {
             canvasWidth: 500,
             canvasHeight: 500,
-            canvasSize: '30*30',
             datatrans: '',
-            nodes: this.props.tagnodes,
+            activeNode: '',
+            nodes: this.props.billnodes
         }
     }
 
     componentDidMount() {
-        this.initTemplate(this.props.tagnodes)
-
-        // JsBarcode(this._barcodeSVG, 'Bar Code', {
-        //     displayValue: false,
-        //     width: 1.5,
-        //     height: 50,
-        //     margin: 0,
-        // })
-    }
-
-    initTemplate = (template) => {
-        lodashmap(template, (v, k) =>{
-            if(k === '二维码'){
-                this.drawImage(v)
-            } else {
-                this.drawText(v)
-            }
-        })
+        this.initTemplate(this.props.billnodes)
     }
 
     handleDragStart = (name, e)=>{
@@ -63,12 +46,106 @@ class Index extends Component {
     RoundPosition = ({x, y}) => {
         const newx = Math.round(x/step)*step
         const newy = Math.round(y/step)*step
-        console.log(newx)
-        console.log(newy)
         return {
             newx,
             newy
         }
+    }
+
+    createQR = (pos) => {
+        const { newx, newy } = this.RoundPosition(pos)
+        const qrcode =  qr.svgObject('票据模板',
+            {  ec_level: 'L',
+                type: 'svg'
+            }
+        )
+        const node = {
+            id: this.state.datatrans,
+            type: 'Path',
+            x: newx,
+            y: newy,
+            data: qrcode.path,
+            fill: 'black',
+            rotation: 0,
+            scale: {
+                x : 4,
+                y : 4
+            }
+        }
+        let nodes = {...this.state.nodes}
+        nodes[this.state.datatrans] = {...node}
+        this.setState({nodes})
+
+        return node
+    }
+
+    createBarcode = (pos) => {
+        const { newx, newy } = this.RoundPosition(pos)
+        const node = {
+            id: this.state.datatrans,
+            type: 'Path',
+            x: newx,
+            y: newy,
+            data: barcode_data,
+            fill: 'black',
+            rotation: 0,
+            scale: {
+                x : 0.1,
+                y : 0.1
+            }
+        }
+        let nodes = {...this.state.nodes}
+        nodes[this.state.datatrans] = {...node}
+        this.setState({nodes})
+
+        return node
+    }
+
+    createText = (pos) => {
+        const { newx, newy } = this.RoundPosition(pos)
+        const { datatrans } = this.state
+        const node = {
+            id: datatrans,
+            type: 'Text',
+            text: datatrans,
+            x: newx,
+            y: newy,
+            rotation: 0,
+            fontSize: 14
+        }
+        console.log('Create Text: ', node)
+        let nodes = {...this.state.nodes}
+        nodes[datatrans] = {...node}
+        this.setState({nodes})
+
+        return node
+    }
+
+    createGroupText = (pos) => {
+        const { newx, newy } = this.RoundPosition(pos)
+        let nodes = {...this.state.nodes}
+        const nodeTemplate = {
+            type: 'Text',
+            y: newy,
+            rotation: 0,
+            fontSize: 14
+        }
+
+        const node1 = { ...nodeTemplate, id: '原价', text: '原价', x: newx }
+        nodes[node1.id] = {...node1}
+        const node2 = { ...nodeTemplate, id: '会员价', text: '会员价', x: newx + 100  }
+        nodes[node2.id] = {...node2}
+        const node3 = { ...nodeTemplate, id: '折扣价', text: '折扣价', x: newx + 200 }
+        nodes[node3.id] = {...node3}
+        const node4 = { ...nodeTemplate, id: '数量', text: '数量', x: newx + 300 }
+        nodes[node4.id] = {...node4}
+
+        this.setState({
+            nodes,
+            datatrans: '数量'
+        })
+
+        return [node1, node2, node3, node4]
     }
 
     handleDrop = (e)=>{
@@ -77,66 +154,42 @@ class Index extends Component {
 
             const stage = this.stage.current
             stage._setPointerPosition(e)
-            const {newx, newy} = this.RoundPosition(stage.getPointerPosition())
-            let currentNode = {
-                id: this.state.datatrans,
-                x: newx,
-                y: newy,
-                rotation: 0
-            }
+            const position = stage.getPointerPosition()
 
-            const nodes = {...this.state.nodes}
             if(this.state.datatrans === '二维码'){
-                const qrcode =  qr.svgObject('票据模板',
-                    {  ec_level: 'L',
-                        type: 'svg'
-                    }
-                )
-
-                currentNode = {
-                    ...currentNode,
-                    data: qrcode.path,
-                    fill: 'black',
-                    type: "Path",
-                    scale: {
-                        x : 4,
-                        y : 4
-                    }
-                }                
-                nodes[this.state.datatrans] = { ...currentNode}
-                this.setState({ nodes })
-                this.drawImage(currentNode)
+                this.initImage(this.createQR(position))
             } else if(this.state.datatrans === '条形码') {
-                currentNode = {
-                    ...currentNode,
-                    data: barcode_data,
-                    fill: 'black',
-                    type: "Text",
-                    scale: {
-                        x : 0.1,
-                        y : 0.1
-                    }
-                }                
-                nodes[this.state.datatrans] = { ...currentNode}
-                this.setState({ nodes })
-                this.drawImage(currentNode)
+                this.initImage(this.createBarcode(position))
             } else {
-                currentNode = {
-                    ...currentNode,
-                    fontSize: 12,
-                    text: this.state.datatrans,
-                }                
-                nodes[this.state.datatrans] = { ...currentNode}
-                this.setState({ nodes })
-                this.drawText(currentNode)
+                if(this.state.datatrans === '价格') {
+                    const textArray = this.createGroupText(position)
+                    lodashmap(textArray, (text) => {
+                        this.initText(text)
+                    })
+                }  else {
+                    console.log('initText...')
+                    this.initText(this.createText(position))
+                }
             }
         }
     }
 
-    drawText = (node) => {
+    initTemplate = (template) => {
+        lodashmap(template, (v, k) =>{
+            if(k === '二维码' || k === '条形码'){
+                this.initImage(v)
+            } else {
+                this.initText(v)
+            }
+        })
+        
+    }
+
+    initText = (node) => {
+        console.log('Init Text: ', node)
         const layer = this.layer.current
 
-        const textNode = new Konva.Text({
+        const text = new Konva.Text({
             ...node,
             draggable: true,
             dragBoundFunc: function(pos) {
@@ -146,17 +199,17 @@ class Index extends Component {
                 }
             }
         })
-        textNode.on('click tap', (e) => {
+        text.on('click tap', (e) => {
             this.setState({
                 datatrans: e.target.attrs.id
             })
         })
-        textNode.on('mousedown touchstar', (e) => {
+        text.on('mousedown touchstar', (e) => {
             this.setState({
                 datatrans: e.target.attrs.id,
             })
         })
-        textNode.on('dragend', (e) => {
+        text.on('dragend', (e) => {
             const {id, x, y} = e.target.attrs
             let nodes = {...this.state.nodes}
             if(x < 0 || y < 0 || x > this.state.canvasWidth || y > this.state.canvasHeight) {
@@ -164,9 +217,18 @@ class Index extends Component {
                 this.setState({
                     nodes
                 })
-                textNode.destroy()
+                text.destroy()
                 layer.draw()
             } else {
+                if(priceGroup.includes(id)){
+                    console.log('Price Group Dragend...')
+                    lodashmap(priceGroup, (nodeName)=>{
+                        let node = this.stage.current.findOne(`#${nodeName}`)
+                        node.setAttr('y', y)
+                        nodes[nodeName] = {...nodes[nodeName], y}
+                    })
+                    layer.draw()
+                }
                 const current = {...nodes[id], x, y}
                 nodes[id] = {...current}
                 this.setState({
@@ -174,13 +236,14 @@ class Index extends Component {
                 })
             }
         })
-        layer.add(textNode)
+
+        layer.add(text)
         layer.draw()
     }
 
-    drawImage = (node) => {
+    initImage = (node) => {
         const layer = this.layer.current
-
+        console.log('Path Node:', node)
         const path = new Konva.Path({
             ...node,
             draggable: true,
@@ -206,7 +269,6 @@ class Index extends Component {
             const {id, x, y} = e.target.attrs
             let nodes = {...this.state.nodes}
             if(x < 0 || y < 0 || x > this.state.canvasWidth || y > this.state.canvasHeight) {
-                console.log('超出边界...')
                 delete nodes[id]
                 this.setState({
                     nodes
@@ -228,9 +290,8 @@ class Index extends Component {
 
 
     handleSave = () => {
-        console.log('尺寸：', this.state.canvasSize)
-        console.log('项目定义：', this.state.nodes)
-        // this.props.dispatch(posprinter_savetemplate({tagnodes: this.state.nodes}));
+        console.log(this.state.nodes)
+        // this.props.dispatch(posprinter_savetemplate({billnodes:this.state.nodes}));
     }
 
     UpdateCavas = ( id, value ) => {
@@ -244,7 +305,17 @@ class Index extends Component {
                 }
             )
         } else {
-            sharp.setAttr(id, value)
+            if(priceGroup.includes(this.state.datatrans)&&id!=='x') {
+                let nodes = {...this.state.nodes}
+                lodashmap(priceGroup, (nodeName) => {
+                    let node = this.stage.current.findOne(`#${nodeName}`)
+                    node.setAttr(id, value)
+                    lodashset(nodes, `${nodeName}.${id}`, value)
+                })
+                this.setState({nodes})
+            } else {
+                sharp.setAttr(id, value)
+            }
         }
         
         layer.draw()
@@ -285,58 +356,32 @@ class Index extends Component {
         }
     }
 
-    handleCanvasChange = (value) => {
-        const canvasSize = value
-        const sizeArray = value.split('*')
-        const canvasWidth = parseInt(sizeArray[0])*10
-        const canvasHeight = parseInt(sizeArray[1])*10
-
-        this.setState({
-            canvasSize,
-            canvasWidth,
-            canvasHeight
-        })
-    }
 
     render() {
+        
         return (
-            <div className="tag-template">
-                <p className="tip">拖动票据项目至右边区域！(拖至画框外可移除项目)</p>
+            <div className="template">
+                <p className="tip">拖动票据项目至右边区域！(拖动项目至画框外可移除项目)</p>
                 <div className="main-container">
                     <div className="tools-container">
                         <div className="tools">
-                            <span className="tools-item" draggable onDragStart={(e)=>this.handleDragStart('品名',e)}>品名</span>
+                            <span className="tools-item" draggable onDragStart={(e)=>this.handleDragStart('品名',e)} onTouchStart ={(e)=>this.handleDragStart('品名', e)}>品名</span>
                             <span className="tools-item" draggable onDragStart={()=>this.handleDragStart('单位')}>单位</span>
-                            <span className="tools-item" draggable onDragStart={()=>this.handleDragStart('原价')}>原价</span>
-                            <span className="tools-item" draggable onDragStart={()=>this.handleDragStart('会员价')}>会员价</span>
-                            <span className="tools-item" draggable onDragStart={()=>this.handleDragStart('折扣价')}>折扣价</span>
-                            <span className="tools-item" draggable onDragStart={()=>this.handleDragStart('日期')}>日期</span>
+                            <span className="tools-item" draggable onDragStart={()=>this.handleDragStart('价格')}>价格信息</span>
+                            {/* <span className="tools-item" draggable onDragStart={()=>this.handleDragStart('会员价')}>会员价</span>
+                            <span className="tools-item" draggable onDragStart={()=>this.handleDragStart('折扣价')}>折扣价</span> */}
+                            <span className="tools-item" draggable onDragStart={()=>this.handleDragStart('日期')} onTouchStart ={(e)=>this.handleDragStart('日期', e)}>日期</span>
                             <span className="tools-item" draggable onDragStart={()=>this.handleDragStart('规格')}>规格</span>
                             <span className="tools-item" draggable onDragStart={()=>this.handleDragStart('自定义')}>自定义</span>
                             <span className="tools-item" draggable onDragStart={()=>this.handleDragStart('条形码')}>条形码</span>
-                            <span className="tools-item" draggable onDragStart={()=>this.handleDragStart('数量')}>数量</span>
+                            {/* <span className="tools-item" draggable onDragStart={()=>this.handleDragStart('数量')}>数量</span> */}
                             <span className="tools-item" draggable onDragStart={()=>this.handleDragStart('库存')}>库存</span>
                             <span className="tools-item" draggable onDragStart={()=>this.handleDragStart('总价')}>总价</span>
                             <span className="tools-item" draggable onDragStart={()=>this.handleDragStart('店名')}>店名</span>
-                            <span className="tools-item" draggable onDragStart={()=>this.handleDragStart('产地')}>产地</span>
+                            <span className="tools-item" draggable onDragStart={()=>this.handleDragStart('产地')}  onTouchStart ={(e)=>this.handleDragStart('产地', e)}>产地</span>
                             <span className="tools-item" draggable onDragStart={()=>this.handleDragStart('二维码')}>二维码</span>
                         </div>
                         <div className="item-control">
-                            <div className="control">
-                                <div className="title">标签尺寸：</div>
-                                <div className="input-control">
-                                    <Select 
-                                        style={{width: '100%', marginLeft: '5px', marginRight: '5px'}} 
-                                        value={this.state.canvasSize} 
-                                        onChange={this.handleCanvasChange}
-                                    >
-                                        <Option value="30*10">30*10</Option>
-                                        <Option value="30*30">30*30</Option>
-                                        <Option value="30*30">30*30</Option>
-                                        <Option value="60*30">60*30</Option>
-                                    </Select>
-                                </div>
-                            </div>
                             <div className="control">
                                 <div className="title">X坐标：</div>
                                 <div className="input-control">
@@ -393,7 +438,6 @@ class Index extends Component {
                             </div> */}
                         </div>
                     </div>
-                    
                     <div className="container" ref={this.containerRef} onDragOver={this.handleDragOver} onDrop={this.handleDrop}>
                         <Stage width={this.state.canvasWidth} height={this.state.canvasHeight}
                             ref={this.stage}
@@ -411,36 +455,8 @@ class Index extends Component {
         )
     }
 }
-
-// const templateData = {
-//     二维码:{
-//         data: "M1 1h7v7h-7zM9 1h2v2h-1v-1h-1zM13 1h1v3h-1zM15 1h7v7h-7zM2 2v5h5v-5zM16 2v5h5v-5zM3 3h3v3h-3zM9 3h1v2h2v1h-3zM11 3h1v1h-1zM17 3h3v3h-3zM12 4h1v1h-1zM9 7h1v1h-1zM11 7h1v3h-1v-1h-1v-1h1zM13 7h1v1h-1zM1 9h4v1h2v1h1v1h-1v1h1v1h-2v-1h-1v1h-2v-3h1v1h2v-1h-2v-1h-1v1h-2zM7 9h1v1h-1zM9 9h1v3h-1zM14 9h1v1h-1zM17 9h3v2h-2v1h-1v-1h-1v4h-1v-2h-2v-3h1v2h1v-2h2zM21 9h1v2h-1zM11 11h1v1h-1zM10 12h1v1h-1zM19 12h1v1h-1zM21 12h1v1h-1zM11 13h2v2h-1v-1h-1zM20 13h1v1h-1zM9 14h2v3h-1v-2h-1zM17 14h3v1h-3zM1 15h7v7h-7zM16 15h1v1h2v1h2v2h-1v-1h-1v1h-1v-1h-2v-1h-2v-1h2zM21 15h1v1h-1zM2 16v5h5v-5zM12 16h1v1h-1zM3 17h3v3h-3zM11 17h1v1h1v-1h1v2h-3zM9 18h1v4h-1zM15 19h3v1h-1v2h-1v-2h-1zM18 20h2v1h-2zM21 20h1v1h-1zM11 21h3v1h-3z",
-//         fill: "black",
-//         id: "二维码",
-//         rotation: 0,
-//         scale: {x: 4, y: 4},
-//         x: 160,
-//         y: 60,
-//     },
-//     价格:{
-//         fontSize: 18,
-//         id: "价格",
-//         rotation: 0,
-//         text: "价格",
-//         x: 190,
-//         y: 160,
-//     },
-//     品名:{
-//         fontSize: 22,
-//         id: "品名",
-//         rotation: 0,
-//         text: "品名",
-//         x: 190,
-//         y: 40,
-//     }
-// }
-const mapStateToProps =  ({posprinter:{tagnodes}}) =>{
-    return {tagnodes};
+const mapStateToProps =  ({posprinter:{billnodes}}) =>{
+  return {billnodes};
 };
 Index = connect(mapStateToProps)(Index);
 export default Index

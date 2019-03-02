@@ -6,6 +6,7 @@ import lodashset from 'lodash.set'
 import { Button, Select, Switch } from 'antd'
 import Konva from 'konva'
 import qr from 'qr-image'
+import renderPrintTemplate from './renderPrintTemplate'
 import './index.less'
 import { posprinter_savetemplate } from '../../actions';
 
@@ -248,6 +249,8 @@ class Index extends Component {
 
     handleSave = () => {
         console.log(this.state.nodes)
+        const printTemplate = renderPrintTemplate(this.state.nodes)
+        console.log(printTemplate)
         // this.props.dispatch(posprinter_savetemplate({billnodes:this.state.nodes}));
     }
 
@@ -310,6 +313,113 @@ class Index extends Component {
 
 
     render() {
+        const OthersProps = () => (
+            <React.Fragment>
+                <div className="item-control">
+                    <div className="control">
+                        <div className="title">排列：</div>
+                        <div className="input-control">
+                            <Select 
+                                style={{width: '100%', marginLeft: '5px', marginRight: '5px'}} 
+                                value={this.state.nodes[this.state.datatrans] ? this.state.nodes[this.state.datatrans].align : ''} 
+                                onChange={(value)=>this.handleChange('align', value)}
+                            >
+                                <Option value="LT">居左</Option>
+                                <Option value="CT">居中</Option>
+                                <Option value="RT">居右</Option>
+                            </Select>
+                        </div>
+                    </div>
+                    <div className="control">
+                        <div className="title">字体：</div>
+                        <div className="input-control">
+                            <Select 
+                                style={{width: '100%', marginLeft: '5px', marginRight: '5px'}} 
+                                value={this.state.nodes[this.state.datatrans] ? this.state.nodes[this.state.datatrans].font: ''}
+                                onChange={(value)=>this.handleChange('font', value)}
+                            >
+                                <Option value="A">A</Option>
+                                <Option value="B">B</Option>
+                            </Select>
+                        </div>
+                    </div>
+                    <div className="control">
+                        <div className="title">宽度：</div>
+                        <div className="input-control">
+                            <input 
+                                value={this.state.nodes[this.state.datatrans] ? this.state.nodes[this.state.datatrans].fontwidth: ''} 
+                                onChange={(e)=>this.handleInputChange('fontwidth', e)} 
+                            />
+                        </div>
+                    </div>
+                    <div className="control">
+                        <div className="title">高度：</div>
+                        <div className="input-control">
+                            <input 
+                                value={this.state.nodes[this.state.datatrans] ? this.state.nodes[this.state.datatrans].fontheight: ''} 
+                                onChange={(e)=>this.handleInputChange('fontheight', e)} 
+                            />
+                        </div>
+                    </div>
+                    <div className="control">
+                        <div className="title">旋转：</div>
+                        <div className="input-control">
+                            <input 
+                                value={this.state.nodes[this.state.datatrans] ? this.state.nodes[this.state.datatrans].rotation: ''} 
+                                onChange={(e)=>this.handleInputChange('rotation', e)} 
+                            />
+                        </div>
+                    </div>
+                    <div className="control">
+                        <div className="title">是否显示标签：</div>
+                        <div className="input-control">
+                            <Switch 
+                                style={{marginLeft: '5px'}}
+                                checked={this.state.nodes[this.state.datatrans] ? this.state.nodes[this.state.datatrans].isprintlabel: true} 
+                                onChange={(checked)=>this.handleChange('isprintlabel', checked)} 
+                            />
+                        </div>
+                    </div>
+                </div>
+            </React.Fragment>
+        )
+
+        const ProductsProps = () => (
+            <React.Fragment>
+                <div className="item-control">
+                    <div className="control">
+                        <div className="title">排列：</div>
+                        <div className="input-control">
+                            <Select 
+                                style={{width: '100%', marginLeft: '5px', marginRight: '5px'}} 
+                                value={this.state.nodes[this.state.datatrans] ? this.state.nodes[this.state.datatrans].align : ''} 
+                                onChange={(value)=>this.handleChange('align', value)}
+                            >
+                                <Option value="LT">居左</Option>
+                                <Option value="CT">居中</Option>
+                                <Option value="RT">居右</Option>
+                            </Select>
+                        </div>
+                    </div>
+                </div>
+            </React.Fragment>
+        )
+
+        const ProductsItemProps = () => (
+            <React.Fragment>
+                <div className="item-control">
+                    <div className="control">
+                        <div className="title">FixedWidth：</div>
+                        <div className="input-control">
+                            <input 
+                                value={this.state.nodes[this.state.datatrans] ? this.state.nodes[this.state.datatrans].fixedwidth: ''} 
+                                onChange={(e)=>this.handleInputChange('fixedwidth', e)} 
+                            />
+                        </div>
+                    </div>
+                </div>
+            </React.Fragment>
+        )
         
         return (
             <div className="template">
@@ -343,72 +453,11 @@ class Index extends Component {
                                 </div>
                             </div>
                         </div>
-                        <div className="item-control">
-                            <div className="control">
-                                <div className="title">排列：</div>
-                                <div className="input-control">
-                                    <Select 
-                                        style={{width: '100%', marginLeft: '5px', marginRight: '5px'}} 
-                                        value={this.state.nodes[this.state.datatrans] ? this.state.nodes[this.state.datatrans].align : ''} 
-                                        onChange={(value)=>this.handleChange('align', value)}
-                                    >
-                                        <Option value="LT">居左</Option>
-                                        <Option value="CT">居中</Option>
-                                        <Option value="RT">居右</Option>
-                                    </Select>
-                                </div>
-                            </div>
-                            <div className="control">
-                                <div className="title">字体：</div>
-                                <div className="input-control">
-                                    <Select 
-                                        style={{width: '100%', marginLeft: '5px', marginRight: '5px'}} 
-                                        value={this.state.nodes[this.state.datatrans] ? this.state.nodes[this.state.datatrans].font: ''}
-                                        onChange={(value)=>this.handleChange('font', value)}
-                                    >
-                                        <Option value="A">A</Option>
-                                        <Option value="B">B</Option>
-                                    </Select>
-                                </div>
-                            </div>
-                            <div className="control">
-                                <div className="title">宽度：</div>
-                                <div className="input-control">
-                                    <input 
-                                        value={this.state.nodes[this.state.datatrans] ? this.state.nodes[this.state.datatrans].fontwidth: ''} 
-                                        onChange={(e)=>this.handleInputChange('fontwidth', e)} 
-                                    />
-                                </div>
-                            </div>
-                            <div className="control">
-                                <div className="title">高度：</div>
-                                <div className="input-control">
-                                    <input 
-                                        value={this.state.nodes[this.state.datatrans] ? this.state.nodes[this.state.datatrans].fontheight: ''} 
-                                        onChange={(e)=>this.handleInputChange('fontheight', e)} 
-                                    />
-                                </div>
-                            </div>
-                            <div className="control">
-                                <div className="title">旋转：</div>
-                                <div className="input-control">
-                                    <input 
-                                        value={this.state.nodes[this.state.datatrans] ? this.state.nodes[this.state.datatrans].rotation: ''} 
-                                        onChange={(e)=>this.handleInputChange('rotation', e)} 
-                                    />
-                                </div>
-                            </div>
-                            <div className="control">
-                                <div className="title">是否显示标签：</div>
-                                <div className="input-control">
-                                    <Switch 
-                                        style={{marginLeft: '5px'}}
-                                        checked={this.state.nodes[this.state.datatrans] ? this.state.nodes[this.state.datatrans].isprintlabel: true} 
-                                        onChange={(checked)=>this.handleChange('isprintlabel', checked)} 
-                                    />
-                                </div>
-                            </div>
-                        </div>
+                        {
+                            this.state.datatrans === 'products' ? <ProductsProps />
+                            : ['name', 'count', 'price'].includes(this.state.datatrans) ? <ProductsItemProps /> : <OthersProps />
+                        }
+                        
                     </div>
                     <div className="container" ref={this.containerRef} onDragOver={this.handleDragOver} onDrop={this.handleDrop}>
                         <Stage width={this.state.canvasWidth} height={this.state.canvasHeight}

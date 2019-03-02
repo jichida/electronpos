@@ -337,6 +337,14 @@ class Index extends Component {
                         </div> */}
                         <div className="item-control">
                             <div className="control">
+                                <div className="title">项目：</div>
+                                <div className="input-control">
+                                    {this.state.nodes[this.state.datatrans] ? this.state.nodes[this.state.datatrans].text: ''} 
+                                </div>
+                            </div>
+                        </div>
+                        <div className="item-control">
+                            <div className="control">
                                 <div className="title">排列：</div>
                                 <div className="input-control">
                                     <Select 
